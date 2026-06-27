@@ -7,6 +7,20 @@ Everything is hard-coded for simplicity:
 - Traefik disabled (bring your own ingress)
 - records the install, config, kubeconfig, and data paths in `install-or-update.sh`
 
+## Release channel philosophy
+
+This repo tracks a Kubernetes minor release channel, currently `v1.35`, instead
+of the generic `stable` channel.
+
+That means rerunning `sudo ./install-or-update.sh` picks up the latest k3s patch
+release for Kubernetes v1.35, but does not intentionally move the node to the
+next Kubernetes minor release. This keeps routine patching predictable while
+avoiding surprise Kubernetes upgrades from `v1.35` to `v1.36`.
+
+When you are ready to move to a newer Kubernetes minor release, update
+`INSTALL_K3S_CHANNEL` in `install-or-update.sh`, review the Kubernetes/k3s
+release notes, then rerun the installer.
+
 ## Usage
 
 ```bash
