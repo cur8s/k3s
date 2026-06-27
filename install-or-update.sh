@@ -3,7 +3,7 @@
 #
 # Each install path and runtime setting is recorded here so the generated
 # systemd service is easy to reason about later. Edit these values before
-# running ./install.sh if you want a different layout.
+# running ./install-or-update.sh if you want a different layout.
 #
 # Uninstall: sudo /usr/local/bin/k3s-uninstall.sh
 set -euo pipefail

@@ -5,22 +5,23 @@ Everything is hard-coded for simplicity:
 
 - tracks the `stable` release channel
 - Traefik disabled (bring your own ingress)
-- records the install, config, kubeconfig, and data paths in `install.sh`
+- records the install, config, kubeconfig, and data paths in `install-or-update.sh`
 
 ## Usage
 
 ```bash
 git clone <this-repo> && cd k3s
-./install.sh                      # you'll be prompted for your sudo password
+./install-or-update.sh            # you'll be prompted for your sudo password
 sudo k3s kubectl get nodes
+./status.sh
 ```
 
 To change the version or server flags, edit the env vars at the top of
-`install.sh`.
+`install-or-update.sh`.
 
 ## Where k3s writes files
 
-The installer records these defaults in `install.sh` before invoking the
+The installer records these defaults in `install-or-update.sh` before invoking the
 official k3s install script:
 
 | Purpose | Env var | Default |
@@ -38,6 +39,13 @@ Useful files and directories after install:
 - `/etc/systemd/system/k3s.service` - systemd service
 - `/etc/systemd/system/k3s.service.env` - environment persisted by the installer
 - `/usr/local/bin/k3s-uninstall.sh` - uninstall script
+
+## Status report
+
+```bash
+./status.sh
+sudo ./status.sh                  # includes node status when kubeconfig is root-only
+```
 
 ## Uninstall
 
