@@ -11,7 +11,7 @@ Everything is hard-coded for simplicity:
 
 ```bash
 git clone <this-repo> && cd k3s
-./install-or-update.sh            # you'll be prompted for your sudo password
+sudo ./install-or-update.sh
 sudo k3s kubectl get nodes
 sudo ./status.sh
 ```

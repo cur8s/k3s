@@ -8,6 +8,18 @@
 # Uninstall: sudo /usr/local/bin/k3s-uninstall.sh
 set -euo pipefail
 
+if [[ "${EUID}" -ne 0 ]]; then
+  cat >&2 <<EOF
+ERROR: install-or-update.sh must be run as root.
+
+k3s installs binaries, systemd units, kubeconfig, and cluster state into
+root-owned locations. Run:
+
+  sudo ./install-or-update.sh
+EOF
+  exit 1
+fi
+
 # Installer-managed paths.
 export INSTALL_K3S_BIN_DIR="/usr/local/bin"          # k3s binary, kubectl/crictl/ctr symlinks, uninstall script
 
