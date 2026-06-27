@@ -3,16 +3,15 @@
 One script to install single-node [k3s](https://k3s.io) on an Ubuntu VM.
 Everything is hard-coded for simplicity:
 
-- pinned to `v1.36.2+k3s1`
+- tracks the `stable` release channel
 - Traefik disabled (bring your own ingress)
-- world-readable kubeconfig (`kubectl` works without `sudo`)
 
 ## Usage
 
 ```bash
 git clone <this-repo> && cd k3s
-./install.sh          # you'll be prompted for your sudo password
-kubectl get nodes
+./install.sh                      # you'll be prompted for your sudo password
+sudo k3s kubectl get nodes
 ```
 
 To change the version or server flags, edit the env vars at the top of
