@@ -3,7 +3,7 @@
 One script to install single-node [k3s](https://k3s.io) on an Ubuntu VM.
 Everything is hard-coded for simplicity:
 
-- tracks the `stable` release channel
+- tracks the `v1.35` release channel for latest Kubernetes v1.35 patches
 - Traefik disabled (bring your own ingress)
 - records the install, config, kubeconfig, and data paths in `install-or-update.sh`
 

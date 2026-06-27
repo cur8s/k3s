@@ -29,7 +29,7 @@ export K3S_KUBECONFIG_OUTPUT="/etc/rancher/k3s/k3s.yaml"
 export K3S_KUBECONFIG_MODE="0600"                   # require sudo/root to read the admin kubeconfig
 
 # Release and server flags.
-export INSTALL_K3S_CHANNEL="stable"                  # install the current stable release
+export INSTALL_K3S_CHANNEL="v1.35"                   # track latest k3s patch for Kubernetes v1.35
 export INSTALL_K3S_EXEC="server --disable=traefik"   # single-node server; disable bundled Traefik
 
 cat <<EOF
