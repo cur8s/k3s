@@ -23,6 +23,7 @@ K3S_SERVICE="/etc/systemd/system/k3s.service"
 K3S_SERVICE_ENV="/etc/systemd/system/k3s.service.env"
 K3S_SQLITE_DB="${K3S_DATA_DIR}/server/db/state.db"
 K3S_UNINSTALL="${INSTALL_K3S_BIN_DIR}/k3s-uninstall.sh"
+K3S_KILLALL="${INSTALL_K3S_BIN_DIR}/k3s-killall.sh"
 
 print_header() {
   printf '\n== %s ==\n' "$1"
@@ -36,6 +37,44 @@ print_path() {
     printf '  %-20s %s [present]\n' "$label:" "$path"
   else
     printf '  %-20s %s [missing]\n' "$label:" "$path"
+  fi
+}
+
+print_cli() {
+  local name="$1"
+  local path="$2"
+  shift 2
+
+  printf '  %-10s %s' "${name}:" "$path"
+
+  if [[ ! -e "$path" ]]; then
+    local path_cmd
+    path_cmd="$(command -v "$name" 2>/dev/null || true)"
+
+    if [[ -n "$path_cmd" ]]; then
+      printf ' [missing; found in PATH at %s]\n' "$path_cmd"
+      path="$path_cmd"
+    else
+      printf ' [missing]\n'
+      return
+    fi
+  elif [[ -L "$path" ]]; then
+    printf ' [symlink -> %s]\n' "$(readlink "$path")"
+  else
+    printf ' [present]\n'
+  fi
+
+  if [[ ! -x "$path" ]]; then
+    printf '    version: not executable\n'
+    return
+  fi
+
+  local output
+  if output="$("$path" "$@" 2>&1)"; then
+    printf '%s\n' "$output" | sed 's/^/    /'
+  else
+    printf '    version command failed:\n'
+    printf '%s\n' "$output" | sed 's/^/      /'
   fi
 }
 
@@ -69,6 +108,14 @@ else
   printf '  k3s binary not found.\n'
 fi
 
+print_header "Command-line tools"
+print_cli "k3s" "${INSTALL_K3S_BIN_DIR}/k3s" --version
+print_cli "kubectl" "${INSTALL_K3S_BIN_DIR}/kubectl" version --client=true
+print_cli "crictl" "${INSTALL_K3S_BIN_DIR}/crictl" --version
+print_cli "ctr" "${INSTALL_K3S_BIN_DIR}/ctr" --version
+print_path "killall script" "$K3S_KILLALL"
+print_path "uninstall script" "$K3S_UNINSTALL"
+
 print_header "Cluster"
 
 if [[ -r "$K3S_KUBECONFIG" ]]; then
@@ -93,6 +140,7 @@ print_path "data dir" "$K3S_DATA_DIR"
 print_path "sqlite db" "$K3S_SQLITE_DB"
 print_path "systemd unit" "$K3S_SERVICE"
 print_path "systemd env" "$K3S_SERVICE_ENV"
+print_path "killall script" "$K3S_KILLALL"
 print_path "uninstall script" "$K3S_UNINSTALL"
 
 print_header "Useful commands"
