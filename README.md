@@ -15,7 +15,8 @@ git clone <this-repo> && cd k3s
 kubectl get nodes
 ```
 
-To change the version or server flags, edit the two values in `install.sh`.
+To change the version or server flags, edit the env vars at the top of
+`install.sh`.
 
 ## Uninstall
 
