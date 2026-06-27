@@ -13,7 +13,7 @@ Everything is hard-coded for simplicity:
 git clone <this-repo> && cd k3s
 ./install-or-update.sh            # you'll be prompted for your sudo password
 sudo k3s kubectl get nodes
-./status.sh
+sudo ./status.sh
 ```
 
 To change the version or server flags, edit the env vars at the top of
@@ -43,8 +43,7 @@ Useful files and directories after install:
 ## Status report
 
 ```bash
-./status.sh
-sudo ./status.sh                  # includes node status when kubeconfig is root-only
+sudo ./status.sh
 ```
 
 ## Uninstall

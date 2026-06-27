@@ -2,6 +2,18 @@
 # Print a read-only status report for this single-node k3s install.
 set -euo pipefail
 
+if [[ "${EUID}" -ne 0 ]]; then
+  cat >&2 <<EOF
+ERROR: status.sh must be run as root.
+
+k3s is configured with a root-only admin kubeconfig, and key state under
+/var/lib/rancher/k3s is owned by root. Run:
+
+  sudo ./status.sh
+EOF
+  exit 1
+fi
+
 INSTALL_K3S_BIN_DIR="/usr/local/bin"
 K3S_BIN="${INSTALL_K3S_BIN_DIR}/k3s"
 K3S_DATA_DIR="/var/lib/rancher/k3s"
@@ -70,8 +82,7 @@ if [[ -r "$K3S_KUBECONFIG" ]]; then
     printf '  k3s binary not found.\n'
   fi
 else
-  printf '  kubeconfig is not readable by this user: %s\n' "$K3S_KUBECONFIG"
-  printf '  Try: sudo %s\n' "$0"
+  printf '  kubeconfig is missing or not readable: %s\n' "$K3S_KUBECONFIG"
 fi
 
 print_header "Key paths"
