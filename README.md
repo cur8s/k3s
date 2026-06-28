@@ -5,6 +5,7 @@ Everything is hard-coded for simplicity:
 
 - tracks the `v1.35` release channel for latest k3s releases on Kubernetes v1.35
 - Traefik disabled (bring your own ingress)
+- keeps the default Flannel CNI enabled
 - records the install, config, kubeconfig, and data paths in `install-or-update.sh`
 
 ## Release channel philosophy
@@ -84,6 +85,34 @@ This repo currently keeps the small runtime configuration in
 If the runtime configuration grows, the next step is to track a repo-owned
 `config.yaml` template and have the install script copy it into
 `/etc/rancher/k3s/config.yaml`.
+
+## Flannel and the default CNI
+
+K3s ships with Flannel as its default Container Network Interface (CNI). The
+[K3s networking docs](https://docs.k3s.io/networking/basic-network-options)
+describe Flannel as the default CNI plugin, and document disabling it with
+`--flannel-backend=none` when installing a different CNI.
+
+Flannel is often described as an overlay network between Kubernetes nodes, but
+it is still important on a single-node cluster. Even when there are no other
+nodes to tunnel to, the CNI layer is responsible for creating pod networking on
+the host, wiring pods into the pod network, and setting up the bridge and routes
+that let pods communicate.
+
+On a single-node cluster, VXLAN overlay traffic is effectively unused because
+pod traffic does not need to leave the machine. The rest of the pod networking
+functionality is still essential. Kubernetes Service routing is handled by the
+Kubernetes networking stack, including kube-proxy rules, but it depends on pods
+having working pod IPs and routes first.
+
+For this repo, keep the default Flannel configuration enabled. It is stable,
+well-tested, and keeps the single-node cluster close to the normal k3s default.
+It also makes a future move to multiple nodes less surprising.
+
+If a different CNI such as Cilium or Calico is desired, do that as an explicit
+networking migration: install and validate the replacement CNI, then disable
+Flannel with the documented k3s configuration for custom CNIs. Do not disable
+Flannel just because the cluster currently has only one node.
 
 ## K3s packaging model
 
