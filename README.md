@@ -21,6 +21,70 @@ When you are ready to move to a newer Kubernetes minor release, update
 `INSTALL_K3S_CHANNEL` in `install-or-update.sh`, review the Kubernetes/k3s
 release notes, then rerun the installer.
 
+## K3s configuration model
+
+K3s runtime configuration is read when the `k3s server` or `k3s agent` process
+starts. It is not a one-time installer-only input, and it is not hot-reloaded
+every time a file changes. If you change runtime configuration after install,
+restart the service:
+
+```bash
+sudo systemctl restart k3s
+```
+
+K3s configuration can come from three places:
+
+- command-line arguments passed to `k3s server` or `k3s agent`, usually through
+  `/etc/systemd/system/k3s.service`
+- `K3S_*` environment variables preserved by the installer into the systemd
+  environment file, usually `/etc/systemd/system/k3s.service.env`
+- `/etc/rancher/k3s/config.yaml`, the optional YAML configuration file
+
+The official [K3s configuration docs](https://docs.k3s.io/installation/configuration)
+allow mixing command-line arguments and `config.yaml`, with command-line
+arguments taking precedence over values from the YAML file. In practice, keep a
+setting in one place so the effective config is easy to audit.
+
+The `config.yaml` file is not created automatically by either the k3s installer
+or the `k3s` binary. If it does not exist, k3s runs with its built-in defaults
+plus any command-line arguments or environment variables provided by the systemd
+service.
+
+By default, k3s loads `/etc/rancher/k3s/config.yaml`. That path can be changed
+with the `--config` CLI flag or the `K3S_CONFIG_FILE` environment variable. K3s
+also supports drop-in files under `/etc/rancher/k3s/config.yaml.d/*.yaml`, which
+are loaded in alphabetical order.
+
+A typical configuration directory looks like this:
+
+```text
+/etc/rancher/k3s/
+|- config.yaml      # user-provided server/agent configuration (optional)
+|- registries.yaml  # private registry configuration (optional)
+`- k3s.yaml         # generated kubeconfig for kubectl and other clients
+```
+
+`k3s.yaml` is not the server configuration file. It is the generated kubeconfig
+used by `kubectl` and other Kubernetes clients to connect to the cluster.
+
+For long-lived and more configurable installations, a clean model is to keep the
+systemd service simple:
+
+```text
+ExecStart=/usr/local/bin/k3s server
+```
+
+and place cluster runtime configuration in `/etc/rancher/k3s/config.yaml`. That
+separates installation mechanics, such as which k3s version to install, from
+runtime cluster configuration, such as `data-dir`, `write-kubeconfig`,
+`write-kubeconfig-mode`, and `disable: [traefik]`.
+
+This repo currently keeps the small runtime configuration in
+`install-or-update.sh` because the single-node setup is intentionally compact.
+If the runtime configuration grows, the next step is to track a repo-owned
+`config.yaml` template and have the install script copy it into
+`/etc/rancher/k3s/config.yaml`.
+
 ## K3s packaging model
 
 k3s is Kubernetes, not a lightweight fork or a separate Kubernetes
@@ -192,7 +256,8 @@ sudo ./status.sh
 ```
 
 To change the version or server flags, edit the env vars at the top of
-`install-or-update.sh`.
+`install-or-update.sh`. This repo does not currently install a
+`/etc/rancher/k3s/config.yaml` file.
 
 ## Where k3s writes files
 
@@ -208,8 +273,12 @@ official k3s install script:
 
 Useful files and directories after install:
 
-- `/etc/rancher/k3s/` - k3s config directory and root-readable admin kubeconfig
-- `/var/lib/rancher/k3s/` - cluster state, containerd data, kubelet data, and local storage
+- `/etc/rancher/k3s/` - k3s configuration directory
+- `/etc/rancher/k3s/config.yaml` - optional server/agent runtime configuration
+- `/etc/rancher/k3s/registries.yaml` - optional private registry configuration
+- `/etc/rancher/k3s/k3s.yaml` - generated root-readable admin kubeconfig
+- `/var/lib/rancher/k3s/` - cluster state, containerd data, kubelet data, and
+  local storage
 - `/var/lib/rancher/k3s/server/db/state.db` - default single-node SQLite datastore
 - `/etc/systemd/system/k3s.service` - systemd service
 - `/etc/systemd/system/k3s.service.env` - environment persisted by the installer
