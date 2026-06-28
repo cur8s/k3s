@@ -145,7 +145,8 @@ print_path "uninstall script" "$K3S_UNINSTALL"
 
 print_header "Useful commands"
 printf '  Check nodes:       sudo k3s kubectl get nodes -o wide\n'
+printf '  Check host config: ./check-config.sh\n'
 printf '  Service logs:      sudo journalctl -u k3s -f\n'
 printf '  Restart service:   sudo systemctl restart k3s\n'
-printf '  Update k3s:        ./install-or-update.sh\n'
+printf '  Update k3s:        sudo ./install-or-update.sh\n'
 printf '  Uninstall k3s:     sudo %s\n' "$K3S_UNINSTALL"

@@ -56,6 +56,36 @@ That extracted runtime area contains tools such as `containerd`, `runc`,
 installer places the main `k3s` binary in `/usr/local/bin` and may create helper
 symlinks there for `kubectl`, `crictl`, and `ctr`.
 
+The `/usr/local/bin/k3s` executable is also a multicall binary. A multicall
+binary is one executable that exposes several command personalities. The command
+it runs can be selected by an explicit subcommand:
+
+```bash
+sudo k3s kubectl get nodes
+sudo k3s crictl ps
+sudo k3s ctr --version
+```
+
+It can also be selected by the name used to invoke the executable. That is why
+the installer can create symlinks like this:
+
+```text
+/usr/local/bin/kubectl -> k3s
+/usr/local/bin/crictl  -> k3s
+/usr/local/bin/ctr     -> k3s
+```
+
+When `/usr/local/bin/kubectl` is a symlink to `/usr/local/bin/k3s`, running
+`kubectl get nodes` still starts the same `k3s` binary. The binary sees that it
+was invoked as `kubectl` and dispatches to its kubectl behavior. This is the
+same general pattern used by tools like BusyBox: one physical executable can
+serve multiple command names.
+
+That multicall behavior is separate from the extracted runtime binaries under
+`/var/lib/rancher/k3s/data/<release-hash>/bin/`. The symlinks in
+`/usr/local/bin` are convenience entrypoints into `k3s`; the extracted files are
+the runtime tools k3s uses internally to run containers.
+
 This packaging model is why k3s can be small without being a different
 Kubernetes. The Kubernetes components share one Go runtime and one copy of the
 linked Kubernetes libraries instead of being shipped as many separate binaries
@@ -158,6 +188,7 @@ git clone <this-repo> && cd k3s
 sudo ./install-or-update.sh
 sudo k3s kubectl get nodes
 sudo ./status.sh
+./check-config.sh
 ```
 
 To change the version or server flags, edit the env vars at the top of
@@ -189,6 +220,21 @@ Useful files and directories after install:
 
 ```bash
 sudo ./status.sh
+```
+
+## Kernel/config check
+
+Run k3s' built-in host configuration check:
+
+```bash
+./check-config.sh
+```
+
+The script prints the Linux distribution, distro version, kernel version,
+architecture, and `/proc/version` first, then invokes:
+
+```bash
+/usr/local/bin/k3s check-config
 ```
 
 ## Uninstall
