@@ -242,3 +242,55 @@ architecture, and `/proc/version` first, then invokes:
 ```bash
 sudo /usr/local/bin/k3s-uninstall.sh
 ```
+
+## References
+
+### K3s Internals video
+
+- Title: [K3s Internals: The Crazy Things We Do To Make k8s Simple - w/ Darren Shepherd, Rancher Labs](https://www.youtube.com/watch?v=k58WnbKmjdA)
+- Source: Civo
+- Speaker: Darren Shepherd
+- YouTube id: `k58WnbKmjdA`
+- Released: January 13, 2021
+- Uploaded: January 14, 2021
+- Duration: `2:36:19`
+- Transcript source: English subtitle transcript downloaded with `yt-dlp`
+
+Chapter outline from the video metadata:
+
+- `00:00` - Intro
+- `02:06` - K3s Internals talk introduction
+- `06:08` - The single binary
+- `28:58` - Agent tunnel
+- `41:40` - etcd management
+- `1:08:00` - Agents and client-side load balancing
+- `1:18:05` - CoreDNS - node DNS
+- `1:22:24` - Patches
+- `1:52:50` - Q&A
+
+Transcript-derived notes relevant to this repo:
+
+- The official install script is intentionally thin: it downloads and verifies
+  the `k3s` binary, installs it, creates helper symlinks and maintenance
+  scripts, writes the systemd unit, and starts `k3s server`.
+- The `k3s` executable is a multicall binary. The same physical binary can act
+  like `k3s`, `kubectl`, `crictl`, or `ctr` depending on the subcommand or the
+  symlink name used to invoke it.
+- The binary is also effectively a self-extracting distribution. On first start,
+  k3s prepares `/var/lib/rancher/k3s/data/<release-hash>/` and extracts the
+  runtime tools it needs under that content-addressed data directory.
+- k3s tries to minimize assumptions about the host OS. The video describes k3s
+  as bringing much of the required user space with it and relying mainly on a
+  suitable Linux kernel and expected system mounts.
+- The extracted runtime includes ordinary Linux executables such as containerd,
+  runc, containerd shims, CNI utilities, BusyBox-style utilities, and support
+  tools used by Kubernetes/containerd features.
+- `k3s check-config` is called out as a useful host validation tool, especially
+  for unusual kernels, custom Linux builds, ARM boards, or other environments
+  that are less standard than a normal Ubuntu VM.
+- The `k3s-killall.sh` and uninstall scripts are operational cleanup tools, not
+  graceful Kubernetes workflows. They do not drain nodes or coordinate workload
+  shutdown through the Kubernetes API.
+
+The raw transcript is not copied into this README; the notes above are a
+paraphrased summary of the downloaded subtitle transcript.
