@@ -21,7 +21,7 @@ EOF
 fi
 
 # Installer-managed paths.
-export INSTALL_K3S_BIN_DIR="/usr/local/bin"          # k3s binary, kubectl/crictl/ctr symlinks, uninstall script
+export INSTALL_K3S_BIN_DIR="/usr/local/bin"          # k3s binary, kubectl/crictl/ctr symlinks, killall/uninstall scripts
 
 # Runtime paths used by k3s itself.
 export K3S_DATA_DIR="/var/lib/rancher/k3s"           # cluster state, containerd data, kubelet data, embedded DB
@@ -40,7 +40,15 @@ Installing k3s with these paths:
   kubeconfig:        ${K3S_KUBECONFIG_OUTPUT}
   data directory:    ${K3S_DATA_DIR}
   sqlite datastore:  ${K3S_DATA_DIR}/server/db/state.db
+  killall script:    ${INSTALL_K3S_BIN_DIR}/k3s-killall.sh
   uninstall script:  ${INSTALL_K3S_BIN_DIR}/k3s-uninstall.sh
+
+Update behavior:
+  rerunning this script updates k3s on channel ${INSTALL_K3S_CHANNEL} and
+  restarts the k3s systemd service if the install changes. The official k3s
+  docs say the installer does not cordon/drain the node and pod containers
+  continue running while k3s restarts. kubectl/crictl/ctr symlinks are created
+  only when those commands are not already found in PATH.
 EOF
 
 curl -sfL https://get.k3s.io | sh -
