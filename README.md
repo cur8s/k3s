@@ -21,6 +21,52 @@ When you are ready to move to a newer Kubernetes minor release, update
 `INSTALL_K3S_CHANNEL` in `install-or-update.sh`, review the Kubernetes/k3s
 release notes, then rerun the installer.
 
+## K3s packaging model
+
+k3s is Kubernetes, not a lightweight fork or a separate Kubernetes
+implementation. It uses the same upstream Kubernetes projects for core
+components such as the API server, scheduler, controller manager, and kubelet.
+
+The main difference is packaging. k3s ships most of the distribution as a
+single `k3s` executable. Components that can run as Go libraries are linked into
+that process, while lower-level runtime tools remain standalone binaries that
+are embedded inside the `k3s` executable.
+
+Conceptually, a single-node server looks like this:
+
+```text
+systemd
+  \_ k3s
+       |- API server
+       |- scheduler
+       |- controller manager
+       |- kubelet
+       `- embedded containerd
+```
+
+Runtime tools that need to behave like normal Linux executables are extracted on
+disk under a versioned data directory:
+
+```text
+/var/lib/rancher/k3s/data/<release-hash>/bin/
+```
+
+That extracted runtime area contains tools such as `containerd`, `runc`,
+`containerd-shim-runc-v2`, `ctr`, and `kubectl`. Separately, the official
+installer places the main `k3s` binary in `/usr/local/bin` and may create helper
+symlinks there for `kubectl`, `crictl`, and `ctr`.
+
+This packaging model is why k3s can be small without being a different
+Kubernetes. The Kubernetes components share one Go runtime and one copy of the
+linked Kubernetes libraries instead of being shipped as many separate binaries
+with duplicated code.
+
+The embedded container runtime also explains the update behavior. k3s manages
+containerd, and containerd manages per-container shim processes. Those shim
+processes are what keep containers attached to the host while containerd or k3s
+restarts. When k3s comes back, containerd reconnects to the existing shims and
+resumes managing the running containers.
+
 ## Update behavior
 
 This repo updates k3s by rerunning the official k3s install script with the
