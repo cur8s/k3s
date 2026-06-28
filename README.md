@@ -100,6 +100,34 @@ So, in normal update conditions, running pods are not intentionally stopped or
 restarted by `sudo ./install-or-update.sh`. The k3s process restarts, but the
 workload containers should keep running.
 
+Why that works:
+
+```text
+systemd
+  \_ k3s
+       \_ embedded containerd
+            \_ containerd-shim-runc-v2
+                 \_ workload container
+```
+
+k3s starts and supervises its embedded containerd. containerd is responsible for
+creating containers, but it does not stay as the direct parent of each running
+container. For each container, containerd creates a shim process. The shim keeps
+the container connected to the host, owns the container process, and preserves
+the container's stdio and exit status.
+
+During a normal k3s service restart, the k3s process and its embedded containerd
+go away temporarily. The shim processes and the workload containers remain
+running. When k3s starts again, embedded containerd reconnects to the existing
+shim processes and resumes managing those containers. That is the mechanism
+behind the k3s docs statement that pod containers continue running while k3s is
+stopped or restarted.
+
+This applies to a normal service restart during install/update. It is different
+from running `/usr/local/bin/k3s-killall.sh` or the uninstall script, which are
+maintenance/destructive operations intended to stop k3s processes and clean up
+state.
+
 This is still not the same thing as a zero-impact production upgrade:
 
 - the Kubernetes API server is briefly unavailable while k3s restarts
