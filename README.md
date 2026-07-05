@@ -8,6 +8,10 @@ Everything is hard-coded for simplicity:
 - keeps the default Flannel CNI enabled
 - records the install, config, kubeconfig, and data paths in `install-or-update.sh`
 
+The `ansible/` directory holds playbooks parked here from the
+cur8s/ubuntu examples trim — see `ansible/README.md` for provenance and
+intended disposition.
+
 ## Release channel philosophy
 
 This repo tracks a Kubernetes minor release channel, currently `v1.35`, instead
